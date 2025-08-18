@@ -2,6 +2,7 @@ const { log } = require("console");
 const { customError } = require("../helpers/customError");
 const user = require("../models/user.model");
 const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const {
   registrationTemplate,
   resendOtpTemplate,
@@ -12,6 +13,7 @@ const { validateUser } = require("../validation/user.validation");
 const { mailer } = require("../helpers/nodemailer");
 const crypto = require("crypto");
 const apiResponse = require("../utils/apiResponse");
+const { sendSms } = require("../helpers/sendSms");
 // registration
 exports.registration = asyncHandler(async (req, res) => {
   const value = await validateUser(req);
@@ -158,9 +160,10 @@ exports.resetPassword = asyncHandler(async (req, res) => {
 // login
 exports.login = asyncHandler(async (req, res) => {
   const { email, password, phone } = await validateUser(req);
-  const findUser = await user.findOne({
-    $or: [{ email: email }, { phone: phone }],
-  });
+  // const findUser = await user.findOne({
+  //   $or: [{ email: email }, { phone: phone }],
+  // });
+  const findUser = await user.findOne({ email, phone });
   if (!findUser) {
     throw new customError(401, "user not found");
   }
@@ -181,9 +184,35 @@ exports.login = asyncHandler(async (req, res) => {
     maxAge: 15 * 24 * 60 * 60 * 1000, // Cookie expiration (7 days)
   });
   findUser.refreshToken = refreshToken;
+  await findUser.save();
   apiResponse.sendSuccess(res, "login successfully", 200, {
     name: findUser.name,
     email: findUser.email,
     accessToken: accessToken,
   });
+});
+
+exports.logOut = asyncHandler(async (req, res) => {
+  console.log(req?.headers);
+
+  const token = req?.headers?.authorization || req?.body?.accessToken;
+  const decode = jwt.verify(token, process.env.REFRESHTOKEN_SECRET);
+  const client = await user.findById(decode.id);
+  if (!client) {
+    throw new customError("user not found", error);
+  }
+  // clear the refresh token
+  client.refreshToken = null;
+  await client.save();
+
+  // now clear the cookie in browser
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV == "development" ? false : true,
+    sameSite: "none",
+    path: "/",
+  });
+
+  await sendSms("01336993890", "Logout successfully" + client.name);
+  apiResponse.sendSuccess(res, "logout successful", 200, client);
 });
