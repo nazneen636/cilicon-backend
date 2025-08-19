@@ -1,4 +1,4 @@
-const { log } = require("console");
+const { log, error } = require("console");
 const { customError } = require("../helpers/customError");
 const user = require("../models/user.model");
 const cookieParser = require("cookie-parser");
@@ -19,48 +19,66 @@ exports.registration = asyncHandler(async (req, res) => {
   const value = await validateUser(req);
   const userData = await new user({
     name: value.name,
-    email: value.email,
+    email: value.email || null,
+    phone: value.phone || null,
     password: value.password,
   }).save();
 
   const otp = crypto.randomInt(1000, 9999);
   const expireTime = Date.now() + 10 * 60 * 1000;
-  const fLink = "https://dummyjson.com/docs/products";
-  const template = registrationTemplate(
-    userData.name,
-    userData.email,
-    otp,
-    expireTime,
-    fLink
-  );
-  await mailer(template, userData.email);
-  userData.resetPasswordOtp = otp;
-  userData.resetPasswordExpires = expireTime;
+  // const fLink = "https://dummyjson.com/docs/products";
+  if (value.email) {
+    const fLink = `https://www.mern.com/verify-account/:${userData.email}`;
+    const template = registrationTemplate(
+      userData.name,
+      userData.email,
+      otp,
+      expireTime,
+      fLink
+    );
+    await mailer(template, userData.email);
+    userData.resetPasswordOtp = otp;
+    userData.resetPasswordExpires = expireTime;
+  }
+
+  if (value.phone) {
+    const fLink = `https://www.mern.com/verify-account/:${userData.phone}`;
+    const smsBody = `Your OTP is ${otp}. It will expire in ${expireTime}minutes. Click here to complete your registration: ${fLink}`;
+    await sendSms(userData.phone, smsBody);
+    userData.resetPasswordOtp = otp;
+    userData.resetPasswordExpires = expireTime;
+  }
+
   await userData.save();
   res.status(201).json({ userData });
 });
 
 // verify email
 exports.verifyEmail = asyncHandler(async (req, res) => {
-  const { email, otp } = req.body;
+  const { email, phone, otp } = req.body;
 
-  if (!email || !otp) {
+  if ((!email && !phone) || !otp) {
     throw new customError(401, "email or otp missing");
   }
-
   const findUser = await user.findOne({
     $and: [
-      { email: email },
+      { $or: [{ email: email }, { phone: req.body.phone }] },
       { resetPasswordOtp: otp },
       { resetPasswordExpires: { $gt: Date.now() } },
     ],
   });
+  if (email && findUser.email === email) {
+    findUser.isEmailVerified = true;
+  } else if (phone && findUser.phone === phone) {
+    findUser.isPhoneVerified = true;
+  }
+  findUser.resetPasswordOtp = null;
+  findUser.resetPasswordExpires = null;
+
   if (!findUser) {
     throw new customError(401, "user not found");
   }
-  findUser.isEmailVerified = true;
-  findUser.resetPasswordOtp = null;
-  findUser.resetPasswordExpires = null;
+
   await findUser.save();
   // res.status(201).json({
   //   message: "verify done",
@@ -196,7 +214,7 @@ exports.logOut = asyncHandler(async (req, res) => {
   console.log(req?.headers);
 
   const token = req?.headers?.authorization || req?.body?.accessToken;
-  const decode = jwt.verify(token, process.env.REFRESHTOKEN_SECRET);
+  const decode = jwt.verify(token, process.env.ACCESSTOKEN_SECRET);
   const client = await user.findById(decode.id);
   if (!client) {
     throw new customError("user not found", error);
@@ -213,6 +231,39 @@ exports.logOut = asyncHandler(async (req, res) => {
     path: "/",
   });
 
-  await sendSms("01336993890", "Logout successfully" + client.name);
+  const smsRes = await sendSms(
+    "01336993890",
+    "Logout successfully" + client.name
+  );
   apiResponse.sendSuccess(res, "logout successful", 200, client);
+  if (smsRes.response_code !== 202) {
+    throw new customError(500, "Send sms failed!!");
+  }
+});
+
+exports.getMe = asyncHandler(async (req, res) => {
+  const token = req?.headers?.authorization || req?.body?.accessToken;
+  if (!token) {
+    throw new customError("token missing");
+  }
+  let decode;
+  try {
+    decode = jwt.verify(token, process.env.ACCESSTOKEN_SECRET);
+  } catch (error) {
+    throw new customError("token not match or expired", error);
+  }
+  // console.log(decode.id);
+
+  const findUser = await user.findById(decode.id);
+  if (!findUser) {
+    throw new customError("user not found", error);
+  }
+  apiResponse.sendSuccess(res, "user Exists", 200, {
+    id: findUser._id,
+    name: findUser.name,
+    email: findUser.email,
+    phone: findUser.phone,
+    isEmailVerified: findUser.isEmailVerified,
+    isPhoneVerified: findUser.isPhoneVerified,
+  });
 });

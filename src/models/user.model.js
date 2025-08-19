@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { string } = require("joi");
 require("dotenv").config();
 const { Schema, Types } = mongoose;
 
@@ -9,11 +10,10 @@ const userSchema = new Schema({
   email: {
     type: String,
     trim: true,
-    required: true,
     unique: [true, "email must be unique"],
   },
   phone: {
-    type: Number,
+    type: String,
     trim: true,
   },
   password: {
@@ -25,8 +25,8 @@ const userSchema = new Schema({
     type: String,
     trim: true,
   },
-  isEmailVerified: Boolean,
-  isPhoneVerified: Boolean,
+  isEmailVerified: { type: Boolean },
+  isPhoneVerified: { type: Boolean },
   address: {
     type: String,
     trim: true,

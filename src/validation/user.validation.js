@@ -11,10 +11,8 @@ const userValidationSchema = Joi.object(
     email: Joi.string()
       .trim()
       .pattern(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/)
-      .required()
       .empty()
       .messages({
-        "string.empty": "Email is required",
         "string.pattern.base": "Email format is invalid",
         "string.email.missingAt": "Email must contain '@' symbol",
         "string.email.invalidDomain": "Email domain format is invalid",
