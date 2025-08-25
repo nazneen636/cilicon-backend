@@ -2,6 +2,7 @@ const { required, boolean } = require("joi");
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const slugify = require("slugify");
+const { customError } = require("../helpers/customError");
 
 const categorySchema = new Schema(
   {
@@ -10,11 +11,7 @@ const categorySchema = new Schema(
       trim: true,
       required: true,
     },
-    image: {
-      type: String,
-      default: "",
-      trim: true,
-    },
+    image: {},
     slug: {
       type: String,
     },
@@ -25,7 +22,7 @@ const categorySchema = new Schema(
       default: true,
     },
   },
-  { Timestamp: true }
+  { timestamps: true }
 );
 
 // make a slugify
@@ -40,6 +37,14 @@ categorySchema.pre("save", async function (next) {
     });
   }
   next();
+});
+
+//check category slug already exists or not
+categorySchema.pre("save", async function (next) {
+  const isExists = await this.constructor.findOne({ slug: this.slug });
+  if (isExists && !isExists._id.equals(this._id)) {
+    throw new customError(401, `${this.name} Already exists try new one`);
+  }
 });
 
 // check user email and phone already exists or not

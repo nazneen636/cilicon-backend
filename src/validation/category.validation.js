@@ -12,13 +12,13 @@ const validateCategory = async (req) => {
     if (image?.length > 1) {
       throw new customError(401, "image must be single");
     }
-    if (image?.size > 40000) {
-      throw new customError(401, "image size upload below 4mb");
+    if (image?.size > 1024 * 1024 * 5) {
+      throw new customError(401, "image size upload below 5 mb");
     }
     if (!allowFormat.includes(image?.mimetype)) {
       throw new customError(401, "image don't support the format");
     }
-    return value;
+    return { name: value.name, image };
   } catch (error) {
     if (error.data == null) {
       throw new customError(401, error);
