@@ -12,5 +12,6 @@ _.route("/update-category/:slug").put(
   upload.fields([{ name: "image", maxCount: 1 }]),
   categoryController.updateCategory
 );
-
+_.route("/delete-category/:slug").delete(categoryController.deleteCategory);
+_.route("/active-category/").get(categoryController.activeCategory);
 module.exports = _;

@@ -63,14 +63,61 @@ exports.updateCategory = asyncHandler(async (req, res) => {
   if (!updateCat) {
     throw new customError(400, `category not found`);
   }
+  console.log(updateCat.name);
 
   if (req.body.name) {
-    category.name = req.body.name || category.name;
+    updateCat.name = req.body.name;
   }
-  if (req?.body?.files?.length) {
+  if (req?.files?.image?.length) {
     // delete previously file
-    const response = await deleteCloudinary(category.image.publicId);
+    const response = await deleteCloudinary(updateCat.image.publicId);
     console.log(response);
+
+    // upload file
+    const updateAsset = await uploadCloudinaryFile(req?.files?.image[0].path);
+    updateCat.image = updateAsset;
   }
+
+  await updateCat.save();
+  console.log(updateCat.image);
   apiResponse.sendSuccess(res, "category updated successfully", 200, updateCat);
+});
+
+exports.deleteCategory = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  if (!slug) {
+    throw new customError(400, `${this.slug} not found`);
+  }
+
+  const deleteCategory = await category.findOneAndDelete({ slug });
+  if (!deleteCategory) {
+    throw new customError(400, `category not deleted`);
+  }
+  await deleteCloudinary(deleteCategory.image.publicId);
+
+  // await deleteCategory.save();
+  apiResponse.sendSuccess(
+    res,
+    "category deleted successfully",
+    200,
+    deleteCategory
+  );
+});
+
+exports.activeCategory = asyncHandler(async (req, res) => {
+  const { active } = req.query;
+  if (!active) {
+    throw new customError(400, `category not found`);
+  }
+
+  const activeCategory = await category.find({ isActive: active });
+  if (!activeCategory) {
+    throw new customError(400, `category not found`);
+  }
+  apiResponse.sendSuccess(
+    res,
+    " active category get successfully",
+    200,
+    activeCategory
+  );
 });

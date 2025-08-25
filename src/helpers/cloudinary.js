@@ -35,13 +35,13 @@ exports.uploadCloudinaryFile = async (filePath) => {
   }
 };
 
-exports.deleteCloudinary = async (filePath) => {
+exports.deleteCloudinary = async (publicId) => {
   try {
     const response = await cloudinary.uploader.destroy(publicId);
     return response;
   } catch (err) {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    if (fs.existsSync(publicId)) {
+      fs.unlinkSync(publicId);
     }
     throw new customError(500, "Failed to update category " + err.message);
   }
