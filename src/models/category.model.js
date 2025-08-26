@@ -1,4 +1,3 @@
-const { required, boolean } = require("joi");
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const slugify = require("slugify");
@@ -47,7 +46,7 @@ categorySchema.pre("save", async function (next) {
   }
 });
 
-// check user email and phone already exists or not
+// check category already exists or not
 categorySchema.pre("save", async function (next) {
   const isExists = await this.constructor.findOne({ slug: this.slug });
   if (isExists && isExists._id.toString() !== this.id.toString()) {
