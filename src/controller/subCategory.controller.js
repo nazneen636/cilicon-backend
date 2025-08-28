@@ -1,4 +1,5 @@
 const { customError } = require("../helpers/customError");
+const categoryModel = require("../models/category.model");
 const subcategoryModel = require("../models/subcategory.model");
 const apiResponse = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
@@ -12,6 +13,18 @@ exports.createSubCategory = asyncHandler(async (req, res) => {
   if (!subCategory) {
     throw new customError(401, "failed create subcategory");
   }
+  const category = await categoryModel
+    .findOneAndUpdate(
+      { _id: value.category },
+      { $push: { subCategory: subCategory._id } },
+      { new: true }
+    )
+    .populate("subCategory");
+
+  // const category = await categoryModel.findById(value.category);
+  // category.subCategory.push(subCategory._id);
+  await category.save();
+  console.log(category);
   apiResponse.sendSuccess(
     res,
     "subcategory created successfully",
@@ -68,6 +81,18 @@ exports.updateSubCategory = asyncHandler(async (req, res) => {
     { ...req.body },
     { new: true }
   );
+  if (req.body.category) {
+    const category = await categoryModel.findOneAndUpdate(
+      {
+        _id: updateSubCat.category._id,
+      },
+      {
+        $push: { subCategory: updateSubCat._id },
+      },
+      { new: true }
+    );
+    updateSubCat.category = req.body.category;
+  }
   if (!updateSubCat) {
     throw new customError(400, `sub category not found`);
   }

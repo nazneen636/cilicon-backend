@@ -71,4 +71,4 @@ subCategorySchema.pre("find", autoPopulate, autoSort);
 // auto populate and sort
 module.exports =
   mongoose.model("SubCategory", subCategorySchema) ||
-  mongoose.model.SubCategory;
+  mongoose.models.SubCategory;

@@ -14,7 +14,12 @@ const categorySchema = new Schema(
     slug: {
       type: String,
     },
-    subCategory: [],
+    subCategory: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "SubCategory",
+      },
+    ],
     discount: [],
     isActive: {
       type: Boolean,
@@ -54,6 +59,24 @@ categorySchema.pre("save", async function (next) {
   }
   next();
 });
+
+// function autoPopulate(next) {
+//   this.populate({
+//     path: "subCategory",
+//   });
+//   next();
+// }
+// function autoSort(next) {
+//   this.sort({
+//     createdAt: -1,
+//   });
+//   next();
+// }
+// categorySchema.pre("find", async function autoPopulate(next) {
+//   await this.populate("subCategory");
+//   next();
+// });
+// categorySchema.pre("findOne", autoPopulate);
 
 module.exports =
   mongoose.model("Category", categorySchema) || mongoose.models.Category;

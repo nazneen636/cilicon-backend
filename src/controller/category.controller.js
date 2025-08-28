@@ -3,8 +3,7 @@ const {
   deleteCloudinary,
 } = require("../helpers/cloudinary");
 const { customError } = require("../helpers/customError");
-
-const category = require("../models/category.model");
+const categoryModel = require("../models/category.model");
 const apiResponse = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { validateCategory } = require("../validation/category.validation");
@@ -26,14 +25,36 @@ exports.createCategory = asyncHandler(async (req, res) => {
 });
 
 exports.getAllCategory = asyncHandler(async (req, res) => {
-  const allCategory = await category.find().sort({ createdAt: -1 });
+  const allCategory = await categoryModel.aggregate([
+    {
+      $lookup: {
+        from: "subcategories",
+        localField: "subCategory",
+        foreignField: "_id",
+        as: "subCategory",
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        image: 1,
+        isActive: 1,
+        slug: 1,
+        createdAt: 1,
+        subCategory: 1,
+      },
+    },
+  ]);
+
   if (!allCategory) {
     throw new customError(401, "category not found");
   }
-  apiResponse.sendSuccess(res, "all category get successfully", 200, {
-    data: allCategory.map((cat) => cat.name),
-    // allCategory,
-  });
+  apiResponse.sendSuccess(
+    res,
+    "all category get successfully",
+    200,
+    allCategory
+  );
 });
 
 // single====
@@ -42,7 +63,7 @@ exports.singleCategory = asyncHandler(async (req, res) => {
   if (!slug) {
     throw new customError(400, `${this.slug} not found`);
   }
-  const singleCat = await category
+  const singleCat = await categoryModel
     .findOne({ slug })
     .select("-_id -updatedAt -createdAt -isActive -__v");
   console.log(singleCat);
@@ -59,7 +80,7 @@ exports.updateCategory = asyncHandler(async (req, res) => {
   if (!slug) {
     throw new customError(400, `${this.slug} not found`);
   }
-  const updateCat = await category.findOne({ slug });
+  const updateCat = await categoryModel.findOne({ slug });
   if (!updateCat) {
     throw new customError(400, `category not found`);
   }
@@ -89,7 +110,7 @@ exports.deleteCategory = asyncHandler(async (req, res) => {
     throw new customError(400, `${this.slug} not found`);
   }
 
-  const deleteCategory = await category.findOneAndDelete({ slug });
+  const deleteCategory = await categoryModel.findOneAndDelete({ slug });
   if (!deleteCategory) {
     throw new customError(400, `category not deleted`);
   }
@@ -110,7 +131,7 @@ exports.activeCategory = asyncHandler(async (req, res) => {
     throw new customError(400, `category not found`);
   }
 
-  const activeCategory = await category.find({ isActive: active });
+  const activeCategory = await categoryModel.find({ isActive: active });
   if (!activeCategory) {
     throw new customError(400, `category not found`);
   }
