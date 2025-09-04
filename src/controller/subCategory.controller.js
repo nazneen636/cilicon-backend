@@ -74,7 +74,7 @@ exports.singleSubCategory = asyncHandler(async (req, res) => {
 exports.updateSubCategory = asyncHandler(async (req, res) => {
   const { slug } = req.params;
   if (!slug) {
-    throw new customError(400, `${this.slug} not found`);
+    throw new customError(400, `subcategory not found`);
   }
   const updateSubCat = await subcategoryModel.findOneAndUpdate(
     { slug },
@@ -82,9 +82,20 @@ exports.updateSubCategory = asyncHandler(async (req, res) => {
     { new: true }
   );
   if (req.body.category) {
-    const category = await categoryModel.findOneAndUpdate(
+    // find the category and remove subcategory
+    await categoryModel.findOneAndUpdate(
       {
         _id: updateSubCat.category._id,
+      },
+      {
+        $pull: { subCategory: updateSubCat._id },
+      },
+      { new: true }
+    );
+    // push the category into new category
+    await categoryModel.findOneAndUpdate(
+      {
+        _id: req.body.category,
       },
       {
         $push: { subCategory: updateSubCat._id },
@@ -108,5 +119,42 @@ exports.updateSubCategory = asyncHandler(async (req, res) => {
     "category updated successfully",
     200,
     updateSubCat
+  );
+});
+
+// delete subcategory
+exports.deleteSubCategory = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  if (!slug) {
+    throw new customError(400, `subcategory not found`);
+  }
+  const deleteSubCat = await subcategoryModel.findOne({ slug });
+  if (deleteSubCat.category) {
+    // find the category and remove subcategory
+    await categoryModel.findOneAndUpdate(
+      {
+        _id: deleteSubCat.category._id,
+      },
+      {
+        $pull: { subCategory: deleteSubCat._id },
+      },
+      { new: true }
+    );
+    deleteSubCat.category = req.body.category;
+  }
+
+  if (!deleteSubCat) {
+    throw new customError(400, `sub category not deleted`);
+  }
+
+  //   if (req.body.name) {
+  //     updateSubCat.name = req.body.name;
+  //   }
+  await deleteSubCat.deleteOne({ _id: deleteSubCat._id });
+  apiResponse.sendSuccess(
+    res,
+    "category deleted successfully",
+    200,
+    deleteSubCat
   );
 });

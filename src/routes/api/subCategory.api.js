@@ -10,4 +10,7 @@ _.route("/single-subcategory/:slug").get(
 _.route("/update-subcategory/:slug").put(
   SubCategoryController.updateSubCategory
 );
+_.route("/delete-subcategory/:slug").delete(
+  SubCategoryController.deleteSubCategory
+);
 module.exports = _;
