@@ -8,5 +8,10 @@ _.route("/create-brand").post(
 );
 _.route("/all-brand").get(brandController.getAllBrand);
 _.route("/single-brand/:slug").get(brandController.singleBrand);
+_.route("/update-brand/:slug").put(
+  upload.fields([{ name: "image", maxCount: 1 }]),
+  brandController.updateBrand
+);
+_.route("/delete-brand/:slug").delete(brandController.deleteBrand);
 
 module.exports = _;
