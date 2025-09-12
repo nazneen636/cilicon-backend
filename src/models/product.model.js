@@ -75,7 +75,7 @@ const productSchema = new Schema(
     sku: {
       type: String,
       unique: true,
-      required: true,
+      // required: true,
     },
     barCode: {
       type: String,
@@ -119,11 +119,11 @@ const productSchema = new Schema(
     },
     purchasePrice: {
       type: Number,
-      required: true,
+      // required: true,
     },
     retailPrice: {
       type: Number,
-      required: true,
+      // required: true,
     },
     retailProfitMarginByPercentage: {
       type: Number,
@@ -153,13 +153,13 @@ const productSchema = new Schema(
       default: true,
     },
     variant: {
-      type: mongoose.Types.ObjectId,
-      ref: "Variant",
+      type: String,
+      enum: ["multiple", "single"],
     },
     category: {
       type: mongoose.Types.ObjectId,
       ref: "Category",
-      required: true,
+      // required: true,
     },
     subCategory: {
       type: mongoose.Types.ObjectId,
@@ -188,6 +188,7 @@ const productSchema = new Schema(
       },
     ],
   },
+
   { timestamps: true }
 );
 

@@ -27,9 +27,8 @@ const productValidationSchema = Joi.object(
 
     availabilityStatus: Joi.boolean().optional(),
 
-    sku: Joi.string().trim().required().messages({
+    sku: Joi.string().trim().messages({
       "string.empty": "SKU is required",
-      "any.required": "SKU is required",
     }),
 
     barCode: Joi.string().trim().optional(),
@@ -58,14 +57,12 @@ const productValidationSchema = Joi.object(
       "number.min": "Stock cannot be negative",
     }),
 
-    purchasePrice: Joi.number().min(0).required().messages({
+    purchasePrice: Joi.number().min(0).messages({
       "number.base": "Purchase price must be a number",
-      "any.required": "Purchase price is required",
     }),
 
-    retailPrice: Joi.number().min(0).required().messages({
+    retailPrice: Joi.number().min(0).messages({
       "number.base": "Retail price must be a number",
-      "any.required": "Retail price is required",
     }),
 
     retailProfitMarginByPercentage: Joi.number().min(0).max(100).optional(),
