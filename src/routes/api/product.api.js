@@ -7,6 +7,12 @@ _.route("/create-product").post(
   productController.createProduct
 );
 _.route("/all-product").get(productController.getAllProduct);
-module.exports = _;
 _.route("/single-product/:slug").get(productController.getSingleProduct);
+_.route("/update-product/:slug").put(productController.updateProduct);
+_.route("/update-product-image/:slug").put(
+  upload.fields([{ name: "image", maxCount: 10 }]),
+  productController.updateProductImage
+);
+_.route("/search-product").get(productController.getProductsByCategory);
+_.route("/price-filter").get(productController.priceFilterProducts);
 module.exports = _;
