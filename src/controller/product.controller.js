@@ -55,11 +55,38 @@ exports.createProduct = asyncHandler(async (req, res) => {
 });
 
 exports.getAllProduct = asyncHandler(async (req, res) => {
-  const product = await productModel.find({}).sort({ createdAt: -1 });
-  if (!product) {
-    throw new customError(500, "product not found");
+  const { sort } = req.query;
+  let sortQuery = {};
+
+  if (sort === "newest") {
+    sortQuery = { createdAt: -1 };
   }
-  apiResponse.sendSuccess(res, "product get successfully", 200, product);
+  if (sort === "oldest") {
+    sortQuery = { createdAt: 1 };
+  }
+  if (sort === "title-asc") {
+    sortQuery = { name: 1 };
+  }
+  if (sort === "title-desc") {
+    sortQuery = { name: -1 };
+  }
+  if (sort === "price-low") {
+    sortQuery = { retailPrice: 1 }; // Low → High
+  }
+  if (sort === "price-high") {
+    sortQuery = { retailPrice: -1 }; // High → Low
+  }
+
+  const products = await productModel
+    .find({})
+    .collation({ locale: "en", strength: 1 }) // case-insensitive title sort
+    .sort(sortQuery);
+
+  if (!products || products.length === 0) {
+    throw new customError(404, "No product found");
+  }
+
+  apiResponse.sendSuccess(res, "Products fetched successfully", 200, products);
 });
 
 exports.getSingleProduct = asyncHandler(async (req, res) => {
@@ -125,9 +152,9 @@ exports.updateProductImage = asyncHandler(async (req, res) => {
   );
 });
 
-exports.getProductsByCategory = asyncHandler(async (req, res) => {
-  const { category, subCategory, brand, name } = req.query;
-  let query;
+exports.getProducts = asyncHandler(async (req, res) => {
+  const { category, subCategory, brand, tag, color, name } = req.query;
+  let query = {};
 
   if (category) {
     query = { ...query, category: category };
@@ -136,10 +163,30 @@ exports.getProductsByCategory = asyncHandler(async (req, res) => {
     query = { ...query, subCategory: subCategory };
   }
   if (brand) {
-    query = { ...query, brand: brand };
+    if (Array.isArray(brand)) {
+      query = { ...query, brand: { $in: brand } };
+    } else {
+      query = { ...query, brand: brand };
+    }
   }
 
-  const product = await productModel.find({ query });
+  if (tag) {
+    if (Array.isArray(tag)) {
+      query = { ...query, tag: { $in: tag } };
+    } else {
+      query = { ...query, tag: tag };
+    }
+  }
+
+  if (color) {
+    if (Array.isArray(color)) {
+      query = { ...query, color: { $in: query } };
+    } else {
+      query = { ...query, color: color };
+    }
+  }
+
+  const product = await productModel.find(query);
   if (!product) {
     throw new customError(404, "No product found");
   }
@@ -163,4 +210,28 @@ exports.priceFilterProducts = asyncHandler(async (req, res) => {
   });
   if (!product) throw new customError(404, "No products found");
   apiResponse.sendSuccess(res, "products fetched successfully", 200, product);
+});
+
+exports.productPagination = asyncHandler(async (req, res) => {
+  const { page, item } = req.query;
+  const skipAmount = (page - 1) * item;
+  const totalItems = await productModel.countDocuments();
+  const totalPage = Math.round(totalItems / item);
+  console.log(totalPage);
+
+  const product = await productModel
+    .find()
+    .limit(item)
+    .skip(skipAmount)
+    .populate({ path: "category" })
+    .populate({ path: "subCategory" })
+    .populate({ path: "brand" });
+  if (!product) {
+    throw new customError("product not found");
+  }
+  apiResponse.sendSuccess(res, "products fetched successfully", 200, {
+    product,
+    totalItems,
+    totalPage,
+  });
 });

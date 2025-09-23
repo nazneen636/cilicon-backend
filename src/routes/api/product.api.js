@@ -13,6 +13,7 @@ _.route("/update-product-image/:slug").put(
   upload.fields([{ name: "image", maxCount: 10 }]),
   productController.updateProductImage
 );
-_.route("/search-product").get(productController.getProductsByCategory);
+_.route("/search-product").get(productController.getProducts);
 _.route("/price-filter").get(productController.priceFilterProducts);
+_.route("/product-pagination").get(productController.productPagination);
 module.exports = _;
