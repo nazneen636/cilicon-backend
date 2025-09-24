@@ -156,6 +156,12 @@ const productSchema = new Schema(
       type: String,
       enum: ["multiple", "single"],
     },
+    variants: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "ProductVariant",
+      },
+    ],
     category: {
       type: mongoose.Types.ObjectId,
       ref: "Category",
