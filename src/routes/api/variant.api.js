@@ -11,5 +11,6 @@ _.route("/update-variant/:slug").put(
   upload.fields([{ name: "images", maxCount: 10 }]),
   variantController.updateVariant
 );
+_.route("/delete-variant/:slug").delete(variantController.deleteVariant);
 
 module.exports = _;

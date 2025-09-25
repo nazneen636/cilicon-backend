@@ -45,12 +45,58 @@ exports.getAllVariant = asyncHandler(async (_, res) => {
   }
   apiResponse.sendSuccess(res, "variation fetched successfully", 201, variant);
 });
+
 exports.updateVariant = asyncHandler(async (req, res) => {
   const { slug } = req.params;
-  const variant = await variantModel.findOne({ slug });
+  const data = req.body;
+  const existingVariant = await variantModel.findOne({ slug });
 
-  if (!variant) {
+  if (!existingVariant) {
     throw new customError(500, "variant not found");
   }
-  apiResponse.sendSuccess(res, "variation fetched successfully", 201, variant);
+  const productChanged =
+    data.product.toString() !== existingVariant.product.toString();
+  const updateVariant = await variantModel.findOneAndUpdate(
+    { slug },
+    { ...data },
+    { new: true }
+  );
+  if (!updateVariant) {
+    throw new customError(500, "variant not updated!!!");
+  }
+  if (productChanged) {
+    // remove old product
+    await productModel.findOneAndUpdate(existingVariant.product, {
+      $pull: { variants: existingVariant._id },
+    });
+    // add new product
+    await productModel.findByIdAndUpdate(updateVariant.product, {
+      $push: {
+        variants: updateVariant._id,
+      },
+    });
+  }
+  apiResponse.sendSuccess(
+    res,
+    "variation updated successfully",
+    201,
+    updateVariant
+  );
+});
+
+exports.deleteVariant = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+
+  const existingVariant = await variantModel.findOneAndDelete({ slug });
+
+  if (!existingVariant) {
+    throw new customError(500, "variant not found");
+  }
+
+  apiResponse.sendSuccess(
+    res,
+    "variation deleted successfully",
+    201,
+    existingVariant
+  );
 });

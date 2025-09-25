@@ -6,11 +6,16 @@ const { customError } = require("../helpers/customError");
 //  review schema
 const reviewSchema = new Schema(
   {
-    reviewerName: {
+    reviewerId: {
       type: mongoose.Types.ObjectId,
       ref: "User",
       required: true,
     },
+    // reviewerName: {
+    //   type: mongoose.Types.ObjectId,
+    //   ref: "User",
+    //   required: true,
+    // },
     comment: {
       type: String,
       trim: true,
@@ -22,10 +27,7 @@ const reviewSchema = new Schema(
       min: 1,
       required: true,
     },
-    image: {
-      type: String,
-      default: null,
-    },
+    image: [{}],
   },
   { timestamps: true }
 );
