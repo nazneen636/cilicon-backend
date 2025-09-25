@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const slugify = require("slugify");
 const { customError } = require("../helpers/customError");
+const { required } = require("joi");
 
 //  review schema
 const reviewSchema = new Schema(
@@ -19,12 +20,17 @@ const reviewSchema = new Schema(
     comment: {
       type: String,
       trim: true,
-      required: true,
+      // required: true,
     },
     rating: {
       type: Number,
       max: 5,
       min: 1,
+      // required: true,
+    },
+    productId: {
+      type: mongoose.Types.ObjectId,
+      ref: "Product",
       required: true,
     },
     image: [{}],
