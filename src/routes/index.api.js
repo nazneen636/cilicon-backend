@@ -9,5 +9,6 @@ _.use("/product", require("./api/product.api"));
 _.use("/variant", require("./api/variant.api"));
 _.use("/review", require("./api/customerReview.api"));
 _.use("/coupon", require("./api/coupon.api"));
+_.use("/cart", require("./api/cart.api"));
 
 module.exports = _;
