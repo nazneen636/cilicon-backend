@@ -26,4 +26,4 @@ const io = initSocket(server);
 // global error handling middleware
 app.use(globalErrorHandler);
 
-module.exports = { server };
+module.exports = { server, io };

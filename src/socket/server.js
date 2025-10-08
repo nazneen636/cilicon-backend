@@ -18,9 +18,7 @@ module.exports = {
     });
   },
   getIo: () => {
-    if (!io) {
-      throw new customError(401, "Socket.io not initialized");
-      return io;
-    }
+    if (!io) throw new customError(401, "Socket.io not initialized");
+    return io;
   },
 };
