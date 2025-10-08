@@ -11,7 +11,7 @@ const variantValidationSchema = Joi.object(
       "any.required": "Variant name is required",
     }),
 
-    product: Joi.string().required().messages({
+    product: Joi.string().trim().required().messages({
       "string.empty": "Product reference is required",
       "any.required": "Product reference is required",
     }),

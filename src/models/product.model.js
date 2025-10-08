@@ -167,7 +167,7 @@ const productSchema = new Schema(
     variants: [
       {
         type: mongoose.Types.ObjectId,
-        ref: "ProductVariant",
+        ref: "Variants",
       },
     ],
     category: {

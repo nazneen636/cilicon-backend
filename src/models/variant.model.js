@@ -17,7 +17,7 @@ const productVariantSchema = new Schema(
       trim: true,
     },
     product: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Types.ObjectId,
       ref: "Product",
       required: true,
     },
@@ -85,5 +85,4 @@ productVariantSchema.pre("save", async function (next) {
 });
 
 module.exports =
-  mongoose.models.ProductVariant ||
-  mongoose.model("ProductVariant", productVariantSchema);
+  mongoose.models.Variants || mongoose.model("Variants", productVariantSchema);

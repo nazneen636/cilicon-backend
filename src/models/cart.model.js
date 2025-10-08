@@ -1,17 +1,18 @@
+const { number } = require("joi");
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const cartItemSchema = new Schema(
   {
-    productId: {
+    product: {
       type: mongoose.Types.ObjectId,
       ref: "Product",
-      required: true,
+      default: null,
     },
-    variantId: {
+    variant: {
       type: mongoose.Types.ObjectId,
       ref: "Variant",
-      required: false, // optional if product has no variants
+      default: null,
     },
     quantity: {
       type: Number,
@@ -23,7 +24,7 @@ const cartItemSchema = new Schema(
       type: Number,
       //   required: true, // price per unit at time of adding to cart
     },
-    totalItemPrice: {
+    totalPrice: {
       type: Number,
       //   required: true, // quantity * price
     },
@@ -53,24 +54,30 @@ const cartSchema = new Schema(
     },
     items: [cartItemSchema],
     coupon: {
-      type: mongoose.Types.ObjectId,
-      ref: "Coupon",
+      // type: mongoose.Types.ObjectId,
+      // ref: "Coupon",
+      type: String,
       required: false,
     },
-    totalPrice: {
+    grossTotalAmount: {
       type: Number,
       default: 0,
       min: 0,
     },
-    discountPrice: {
+    totalQuantity: {
       type: Number,
       default: 0,
+    },
+    finalAmount: {
+      type: Number,
       min: 0,
     },
-    afterApplyCouponPrice: {
+    discountType: {
+      type: String,
+      default: "N/A",
+    },
+    discountAmount: {
       type: Number,
-      default: 0,
-      min: 0,
     },
   },
   { timestamps: true }
