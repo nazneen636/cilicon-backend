@@ -12,6 +12,11 @@ module.exports = {
     // connect socket
     io.on("connection", (socket) => {
       console.log("client server connect", socket.id);
+      const userId = socket.handshake.query.userId;
+      if (userId) {
+        socket.join(userId);
+      }
+      // console.log(userId);
     });
     io.on("disconnect", (socket) => {
       console.log("client server disconnected");

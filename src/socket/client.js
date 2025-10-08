@@ -1,5 +1,8 @@
 const { io } = require("socket.io-client");
-const socket = io("http://localhost:4000");
+const socket = io("http://localhost:4000", {
+  transports: ["websocket"],
+  query: { userId: "123" },
+});
 
 // client-side
 socket.on("connect", () => {
