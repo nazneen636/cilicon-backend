@@ -10,64 +10,65 @@ const orderSchema = new mongoose.Schema(
     },
     guestId: {
       type: String,
-      default: null,
       trim: true,
+      default: null,
     },
 
-    // 🛒 Items (optional, but can validate later in controller)
+    // 🛒 Items
     items: [
       {
         productId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
+          required: true,
         },
-        name: String,
-        price: Number,
-        quantity: Number,
-        totalPrice: Number,
+        name: {
+          type: String,
+          trim: true,
+          required: true,
+        },
+        price: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          min: 1,
+        },
+        totalPrice: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
       },
     ],
 
-    // 🚚 Shipping info (required)
+    // 🚚 Shipping info
     shippingInfo: {
-      fullName: {
-        type: String,
-        required: [true, "Full name is required"],
-        trim: true,
-      },
+      fullName: { type: String, trim: true, required: true },
       phone: {
         type: String,
-        required: [true, "Phone number is required"],
+        trim: true,
+        required: true,
         match: [/^\+?\d{10,15}$/, "Invalid phone number format"],
       },
-      address: {
-        type: String,
-        required: [true, "Address is required"],
-        trim: true,
-      },
-      city: {
-        type: String,
-        required: [true, "City is required"],
-        trim: true,
-      },
-      postalCode: {
-        type: String,
-        required: [true, "Postal code is required"],
-        trim: true,
-      },
+      address: { type: String, trim: true, required: true },
+      city: { type: String, trim: true, required: true },
+      postalCode: { type: String, trim: true },
     },
 
-    // 🌍 Delivery info (deliveryCharge required)
+    // 🌍 Delivery info
     deliveryCharge: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "DeliveryCharge",
-      required: [true, "Delivery charge is required"],
+      required: true,
     },
-
     country: {
       type: String,
-      default: "Bangladesh",
       trim: true,
+      default: "Bangladesh",
     },
     deliveryZone: {
       type: String,
@@ -75,11 +76,11 @@ const orderSchema = new mongoose.Schema(
       default: "inside_dhaka",
     },
 
-    // 💳 Payment details (required)
+    // 💳 Payment details
     paymentMethod: {
       type: String,
       enum: ["cod", "sslCommerZ"],
-      required: [true, "Payment method is required"],
+      required: true,
     },
     paymentStatus: {
       type: String,
@@ -87,14 +88,34 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
 
-    // ⚙️ Optional metadata
-    transactionId: String,
-    valId: String,
-    currency: {
-      type: String,
-      default: "BDT",
-      trim: true,
+    // 💰 Amounts
+    totalAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
+    discountAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    finalAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // 🧾 Coupon (optional)
+    coupon: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Coupon",
+      default: null,
+    },
+
+    // ⚙️ Metadata
+    transactionId: { type: String, trim: true, default: null },
+    valId: { type: String, trim: true, default: null },
+    currency: { type: String, trim: true, default: "BDT" },
     paymentGatewayData: {
       type: mongoose.Schema.Types.Mixed,
       default: {},
@@ -104,11 +125,7 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Hold", "Confirmed", "Packaging"],
       default: "Pending",
     },
-    invoiceId: {
-      type: String,
-      trim: true,
-      default: null,
-    },
+    invoiceId: { type: String, trim: true, default: null },
     followUp: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -116,18 +133,19 @@ const orderSchema = new mongoose.Schema(
     },
     orderType: {
       type: String,
-      enum: ["Complete", "Partial", "preorder"],
+      enum: ["Complete", "Partial", "Preorder"],
       default: "Complete",
     },
     totalQuantity: {
       type: Number,
       default: 0,
+      min: 0,
     },
   },
   { timestamps: true }
 );
 
-// ✅ Custom validation: at least one of user or guestId
+// ✅ Custom validation: ensure either user or guestId is provided
 orderSchema.pre("validate", function (next) {
   if (!this.user && !this.guestId) {
     next(new Error("Either user or guestId is required"));
