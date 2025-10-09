@@ -7,7 +7,9 @@ const apiResponse = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { validateCart } = require("../validation/cart.validation");
 const { default: mongoose } = require("mongoose");
-
+const { getIo } = require("../socket/server");
+// const io = getIo();
+// apply coupon
 const applyCoupon = async (totalPrice = 0, couponCode = null) => {
   if (!couponCode) return totalPrice;
   try {
@@ -162,6 +164,12 @@ exports.createCart = asyncHandler(async (req, res) => {
     throw new customError(401, "cart create failed");
   }
 
+  const io = getIo();
+  io.to("123").emit("cart", {
+    message: "add to cart successfully",
+    data: cart,
+  });
+
   apiResponse.sendSuccess(res, "add to cart successfully", 201, cart);
 });
 
@@ -201,6 +209,13 @@ exports.decreaseQuantity = asyncHandler(async (req, res) => {
   cart.finalAmount = totalPrice;
   cart.totalQuantity = totalQuantity;
   await cart.save();
+
+  const io = getIo();
+  io.to("123").emit("cart", {
+    message: "cart item decrease",
+    data: cart,
+  });
+
   apiResponse.sendSuccess(res, "decrease cart successfully", 201, cart);
 });
 
@@ -240,6 +255,12 @@ exports.increaseQuantity = asyncHandler(async (req, res) => {
   cart.finalAmount = totalPrice;
   cart.totalQuantity = totalQuantity;
   await cart.save();
+
+  const io = getIo();
+  io.to("123").emit("cart", {
+    message: "cart item increase",
+    data: cart,
+  });
   apiResponse.sendSuccess(res, "increase cart successfully", 201, cart);
 });
 
@@ -280,6 +301,10 @@ exports.deleteCart = asyncHandler(async (req, res) => {
     // await cart.save();
     apiResponse.sendSuccess(res, "No items to delete", 201, null);
   }
-
+  const io = getIo();
+  io.to("123").emit("cart", {
+    message: "cart item removed",
+    data: cart,
+  });
   apiResponse.sendSuccess(res, "cart remove successfully", 201, cart);
 });

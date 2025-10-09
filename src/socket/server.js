@@ -6,12 +6,12 @@ module.exports = {
   initSocket: (hostServer) => {
     io = new Server(hostServer, {
       cors: {
-        origin: "http://localhost:5173",
+        origin: "*",
       },
     });
-    // connect socket
+    // connect socket http://localhost:5173
     io.on("connection", (socket) => {
-      console.log("client server connect", socket.id);
+      console.log("client server connect");
       const userId = socket.handshake.query.userId;
       if (userId) {
         socket.join(userId);
