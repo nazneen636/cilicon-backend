@@ -40,10 +40,8 @@ const orderValidationSchema = Joi.object(
         "any.required": "Shipping information is required",
       }),
 
-    deliveryCharge: Joi.number().min(0).required().messages({
-      "number.base": "Delivery charge must be a number",
-      "number.min": "Delivery charge cannot be negative",
-      "any.required": "Delivery charge is required",
+    deliveryCharge: Joi.string().required().messages({
+      "string.base": "Delivery charge must be a string id",
     }),
 
     paymentMethod: Joi.string()
