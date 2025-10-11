@@ -8,6 +8,7 @@ const { asyncHandler } = require("../utils/asyncHandler");
 const { validateOrder } = require("../validation/order.validation");
 const NodeCache = require("node-cache");
 const delivaryChargeModel = require("../models/delivaryCharge.model");
+const invoiceModel = require("../models/invoice.model");
 const myCache = new NodeCache();
 
 // apply deliverycharge method
@@ -73,6 +74,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
       shippingInfo,
       deliveryCharge,
       paymentMethod,
+      followUp: req.user || "",
+      totalQuantity = cart.totalQuantity;
     });
     // merge delivery charge
     const { name, deliveryCharge } = await applyDeliveryCharge(deliveryCharge);
@@ -82,9 +85,28 @@ exports.createOrder = asyncHandler(async (req, res) => {
     order.shippingInfo.deliveryZone = name;
 
     // payment
+    const transactionID = `INV-${crypto
+      .randomUUID()
+      .split("-")[0]
+      .toLocaleUpperCase()}`;
+    // make invoice database
+    const invoice = await invoiceModel({
+      inVoiceId: transactionID,
+      order: order._id,
+      customerDetails: shippingInfo,
+      finalAmount: order.finalAmount,
+      discountAmount: order.discountAmount,
+      deliveryChargeAmount: deliveryCharge,
+    });
+
     if (paymentMethod == "cod") {
       order.paymentMethod = "cod";
       order.paymentStatus = "pending";
+      order.transactionID = transactionID;
+      order.orderStatus = "pending";
+      order.invoice = invoice.inVoiceId;
+
+    } else {
     }
   } catch (error) {
     throw new customError(500, "order failed", error);
