@@ -47,6 +47,10 @@ const productVariantSchema = new Schema(
     inStock: { type: Boolean, default: true },
     isActive: { type: Boolean, default: true },
     images: [{}],
+    totalSales: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

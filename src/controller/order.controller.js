@@ -1,6 +1,8 @@
 const { customError } = require("../helpers/customError");
 const orderModel = require("../models/order.model");
 const cartModel = require("../models/cart.model");
+const productModel = require("../models/product.model");
+const variantModel = require("../models/variant.model");
 const apiResponse = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { validateOrder } = require("../validation/order.validation");
@@ -9,7 +11,7 @@ const delivaryChargeModel = require("../models/delivaryCharge.model");
 const myCache = new NodeCache();
 
 // apply deliverycharge method
-const applyDeliveryCharge = async (grossTotalAmount, dcId) => {
+const applyDeliveryCharge = async (dcId) => {
   try {
     const deliveryCharge = await delivaryChargeModel.findOne({ _id: dcId });
     if (!deliveryCharge)
@@ -30,9 +32,67 @@ exports.createOrder = asyncHandler(async (req, res) => {
     .populate("coupon");
   console.log(cart);
 
-  // if (!cart) {
-  //   throw new customError(500, "brand create failed");
-  // }
-  // apiResponse.sendSuccess(res, "brand created successfully", 200, cart);
-  // await brand.save();
+  // reduce stock
+  let allStockAdjustPromise = [];
+  for (let item of cart.items) {
+    // if product
+    if (item.product) {
+      allStockAdjustPromise.push(
+        productModel.findOneAndUpdate(
+          { _id: item.product._id },
+          { $inc: { totalStock: -item.quantity }, totalSales: item.quantity },
+          {
+            new: true,
+          }
+        )
+      );
+    }
+    // if variant
+    if (item.variant) {
+      allStockAdjustPromise.push(
+        variantModel.findOneAndUpdate(
+          { _id: item.variant._id },
+          {
+            $inc: { stockVariant: -item.quantity },
+            totalSales: item.quantity,
+          },
+          {
+            new: true,
+          }
+        )
+      );
+    }
+  }
+
+  let order = null;
+  try {
+    order = new orderModel({
+      user: user,
+      guestId: guestId,
+      items: cart.items,
+      shippingInfo,
+      deliveryCharge,
+      paymentMethod,
+    });
+    // merge delivery charge
+    const { name, deliveryCharge } = await applyDeliveryCharge(deliveryCharge);
+    order.discountAmount = cart.discountAmount;
+    order.discountType = cart.discountType;
+    order.finalAmount = cart.finalAmount + deliveryCharge;
+    order.shippingInfo.deliveryZone = name;
+
+    // payment
+    if (paymentMethod == "cod") {
+      order.paymentMethod = "cod";
+      order.paymentStatus = "pending";
+    }
+  } catch (error) {
+    throw new customError(500, "order failed", error);
+  }
 });
+
+// if (!cart) {
+//   throw new customError(500, "brand create failed");
+// }
+// apiResponse.sendSuccess(res, "brand created successfully", 200, cart);
+// await brand.save();

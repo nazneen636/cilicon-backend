@@ -201,6 +201,10 @@ const productSchema = new Schema(
         ref: "Discount",
       },
     ],
+    totalSales: {
+      type: Number,
+      default: 0,
+    },
   },
 
   { timestamps: true }
