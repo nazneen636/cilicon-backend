@@ -20,7 +20,7 @@ app.use(cookieParser());
 app.use(cors({ origin: "http://localhost:5173" }));
 
 // routes
-app.use("/api/v1", require("./routes/index.api"));
+app.use(process.env.BASE_API || "/api/v1", require("./routes/index.api"));
 
 const io = initSocket(server);
 // global error handling middleware
