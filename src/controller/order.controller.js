@@ -130,10 +130,10 @@ exports.createOrder = asyncHandler(async (req, res) => {
         cus_postcode: "1000",
         cus_country: "Bangladesh",
         cus_phone: "01711111111",
-        // cus_fax: "01711111111",
-        // ship_name: "Customer Name",
-        // ship_add1: "Dhaka",
-        // ship_add2: "Dhaka",
+
+        ship_name: "Customer Name",
+        ship_add1: "Dhaka",
+        ship_add2: "Dhaka",
         ship_city: "Dhaka",
         ship_state: "Dhaka",
         ship_postcode: 1000,
@@ -143,9 +143,9 @@ exports.createOrder = asyncHandler(async (req, res) => {
       const response = await sslcz.init(data);
       console.log(response.GatewayPageURL);
 
-      let GatewayPageURL = apiResponse.GatewayPageURL;
-      res.redirect(GatewayPageURL);
-      console.log("Redirecting to: ", GatewayPageURL);
+      apiResponse.sendSuccess(res, 200, "payment initiate successful", {
+        url: response.GatewayPageURL,
+      });
     }
   } catch (error) {
     throw new customError(500, "order failed", error);
