@@ -8,10 +8,11 @@ const { asyncHandler } = require("../utils/asyncHandler");
 const { validateOrder } = require("../validation/order.validation");
 const delivaryChargeModel = require("../models/delivaryCharge.model");
 const invoiceModel = require("../models/invoice.model");
+const crypto = require("crypto");
 const SSLCommerzPayment = require("sslcommerz-lts");
 
-const store_id = "<your_store_id>";
-const store_passwd = "<your_store_password>";
+const store_id = process.env.SSLCOMMERZ_STORE_ID;
+const store_passwd = process.env.SSLCOMMERZ_API_KEY;
 const is_live = process.env.NODE_ENV == "development" ? false : true;
 
 // apply deliverycharge method
@@ -34,7 +35,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
     .populate("items.variant")
     .populate("items.product")
     .populate("coupon");
-  console.log(cart);
+  // console.log(cart);
 
   // reduce stock
   let allStockAdjustPromise = [];
@@ -44,7 +45,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
       allStockAdjustPromise.push(
         productModel.findOneAndUpdate(
           { _id: item.product._id },
-          { $inc: { totalStock: -item.quantity }, totalSales: item.quantity },
+          { $inc: { totalStock: item.quantity }, totalSales: -item.quantity },
           {
             new: true,
           }
@@ -57,8 +58,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
         variantModel.findOneAndUpdate(
           { _id: item.variant._id },
           {
-            $inc: { stockVariant: -item.quantity },
-            totalSales: item.quantity,
+            $inc: { stockVariant: item.quantity },
+            totalSales: -item.quantity,
           },
           {
             new: true,
@@ -69,6 +70,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
   }
 
   let order = null;
+
   try {
     order = new orderModel({
       user: user,
@@ -80,11 +82,14 @@ exports.createOrder = asyncHandler(async (req, res) => {
       followUp: req.user || "",
       totalQuantity: cart.totalQuantity,
     });
+
     // merge delivery charge
-    const { name, deliveryCharge } = await applyDeliveryCharge(deliveryCharge);
+    const { name, deliveryCharge: deliveryChargeAmount } =
+      await applyDeliveryCharge(deliveryCharge);
+    // console.log(name, deliveryChargeAmount, "order");
     order.discountAmount = cart.discountAmount;
     order.discountType = cart.discountType;
-    order.finalAmount = cart.finalAmount + deliveryCharge;
+    order.finalAmount = cart.finalAmount + deliveryChargeAmount;
     order.shippingInfo.deliveryZone = name;
 
     // payment
@@ -93,15 +98,14 @@ exports.createOrder = asyncHandler(async (req, res) => {
       .split("-")[0]
       .toLocaleUpperCase()}`;
     // make invoice database
-    const invoice = await invoiceModel({
+    const invoice = await invoiceModel.create({
       inVoiceId: transactionID,
       order: order._id,
       customerDetails: shippingInfo,
       finalAmount: order.finalAmount,
       discountAmount: order.discountAmount,
-      deliveryChargeAmount: deliveryCharge,
+      deliveryChargeAmount: deliveryChargeAmount,
     });
-
     if (paymentMethod == "cod") {
       order.paymentMethod = "cod";
       order.paymentStatus = "pending";
@@ -141,14 +145,17 @@ exports.createOrder = asyncHandler(async (req, res) => {
       };
       const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
       const response = await sslcz.init(data);
-      console.log(response.GatewayPageURL);
+      console.log(response.GatewayPageURL, "ok");
 
       apiResponse.sendSuccess(res, 200, "payment initiate successful", {
         url: response.GatewayPageURL,
       });
+      // save in order model
+      await order.save();
+      apiResponse.sendSuccess(res, 200, "order successful", order);
     }
   } catch (error) {
-    throw new customError(500, "order failed", error);
+    throw new customError(500, "order failed", error.message);
   }
 });
 

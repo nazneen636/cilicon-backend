@@ -16,10 +16,7 @@ const invoiceSchema = new Schema(
       unique: true,
     },
     customerDetails: {},
-    totalAmount: {
-      type: Number,
-      required: true,
-    },
+
     discountAmount: {
       type: Number,
       default: 0,

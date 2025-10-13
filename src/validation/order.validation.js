@@ -44,14 +44,10 @@ const orderValidationSchema = Joi.object(
       "string.base": "Delivery charge must be a string id",
     }),
 
-    paymentMethod: Joi.string()
-      .valid("Cash on Delivery", "Online Payment", "Card")
-      .required()
-      .messages({
-        "string.empty": "Payment method is required",
-        "any.only":
-          "Payment method must be one of: Cash on Delivery, Online Payment, or Card",
-      }),
+    paymentMethod: Joi.string().valid("cod", "sslCommerZ").required().messages({
+      "string.empty": "Payment method is required",
+      "any.only": "Payment method must be one of: cod or sslCommerZ",
+    }),
   },
   { abortEarly: true }
 ).unknown(true);
