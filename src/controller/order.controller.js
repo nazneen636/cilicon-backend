@@ -35,7 +35,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
     .populate("items.variant")
     .populate("items.product")
     .populate("coupon");
-  // console.log(cart);
+  console.log(cart.coupon._id, usedCount);
 
   // reduce stock
   let allStockAdjustPromise = [];
@@ -60,9 +60,6 @@ exports.createOrder = asyncHandler(async (req, res) => {
           {
             $inc: { stockVariant: item.quantity },
             totalSales: -item.quantity,
-          },
-          {
-            new: true,
           }
         )
       );

@@ -21,7 +21,7 @@ const productionError = (error, res) => {
     return res.status(statusCode).json({
       message: "server Failed try again",
     });
-  } 
+  }
 };
 
 exports.globalErrorHandler = (error, req, res, next) => {

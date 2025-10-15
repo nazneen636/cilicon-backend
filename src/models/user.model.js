@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { string } = require("joi");
 require("dotenv").config();
 const { Schema, Types } = mongoose;
+const slugify = require("slugify");
 
 const userSchema = new Schema({
   name: { type: String, trim: true },

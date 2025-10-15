@@ -3,8 +3,7 @@ const morgan = require("morgan");
 const app = express();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const chalk = require("chalk");
-const { globalErrorHandler } = require("./helpers/globarErrorHandler");
+const { globalErrorHandler } = require("./helpers/globalErrorHandler");
 const http = require("http");
 const { initSocket } = require("./socket/server");
 // all global middleware
