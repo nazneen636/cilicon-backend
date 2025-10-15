@@ -54,8 +54,8 @@ const cartSchema = new Schema(
     },
     items: [cartItemSchema],
     coupon: {
-      // type: mongoose.Types.ObjectId,
-      // ref: "Coupon",
+      type: mongoose.Types.ObjectId,
+      ref: "Coupon",
       type: String,
       required: false,
     },

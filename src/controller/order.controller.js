@@ -2,6 +2,7 @@ const { customError } = require("../helpers/customError");
 const orderModel = require("../models/order.model");
 const cartModel = require("../models/cart.model");
 const productModel = require("../models/product.model");
+const couponModel = require("../models/coupon.model");
 const variantModel = require("../models/variant.model");
 const apiResponse = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
@@ -35,7 +36,6 @@ exports.createOrder = asyncHandler(async (req, res) => {
     .populate("items.variant")
     .populate("items.product")
     .populate("coupon");
-  console.log(cart.coupon._id, usedCount);
 
   // reduce stock
   let allStockAdjustPromise = [];
@@ -152,8 +152,51 @@ exports.createOrder = asyncHandler(async (req, res) => {
       apiResponse.sendSuccess(res, 200, "order successful", order);
     }
   } catch (error) {
-    throw new customError(500, "order failed", error.message);
+    console.log("order failed", error.message);
+
+    let allStockAdjustPromise = [];
+    if (order && order._id) {
+      for (let item of cart.items) {
+        // if product
+        if (item.product) {
+          allStockAdjustPromise.push(
+            productModel.findOneAndUpdate(
+              { _id: item.product._id },
+              {
+                $inc: { totalStock: item.quantity },
+                totalSales: -item.quantity,
+              },
+              {
+                new: true,
+              }
+            )
+          );
+        }
+        // if variant
+        if (item.variant) {
+          allStockAdjustPromise.push(
+            variantModel.findOneAndUpdate(
+              { _id: item.variant._id },
+              {
+                $inc: { stockVariant: item.quantity },
+                totalSales: -item.quantity,
+              }
+            )
+          );
+        }
+      }
+    }
+
+    // coupon rollback
+    allStockAdjustPromise.push(
+      couponModel.findOneAndUpdate(
+        { _id: cart.coupon._id },
+        // { $inc: { usedCount: -1 } }
+        { usedCount: usedCount - 1 }
+      )
+    );
   }
+  await Promise.all(allStockAdjustPromise);
 });
 
 // if (!cart) {

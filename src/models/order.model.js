@@ -87,10 +87,10 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "success", "failed", "cancelled"],
       default: "pending",
     },
-    // paymentInfo: {
-    //   type: mongoose.Types.Mixed,
-    //   default: {},
-    // },
+    paymentInfo: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
     // 💰 Amounts
     totalAmount: {
       type: Number,
