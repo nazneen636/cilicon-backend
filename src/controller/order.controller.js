@@ -147,10 +147,10 @@ exports.createOrder = asyncHandler(async (req, res) => {
       apiResponse.sendSuccess(res, 200, "payment initiate successful", {
         url: response.GatewayPageURL,
       });
-      // save in order model
-      await order.save();
-      apiResponse.sendSuccess(res, 200, "order successful", order);
     }
+    // save in order model
+    await order.save();
+    apiResponse.sendSuccess(res, 200, "order successful", order);
   } catch (error) {
     console.log("order failed", error.message);
 
@@ -191,8 +191,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
     allStockAdjustPromise.push(
       couponModel.findOneAndUpdate(
         { _id: cart.coupon._id },
-        // { $inc: { usedCount: -1 } }
-        { usedCount: usedCount - 1 }
+        { $inc: { usedCount: -1 } }
+        // { usedCount: usedCount - 1 }
       )
     );
   }

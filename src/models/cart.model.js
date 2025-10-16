@@ -56,8 +56,9 @@ const cartSchema = new Schema(
     coupon: {
       type: mongoose.Types.ObjectId,
       ref: "Coupon",
-      type: String,
-      required: false,
+      default:null
+      // type: String,
+      // required: false,
     },
     grossTotalAmount: {
       type: Number,

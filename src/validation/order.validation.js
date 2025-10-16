@@ -48,6 +48,7 @@ const orderValidationSchema = Joi.object(
       "string.empty": "Payment method is required",
       "any.only": "Payment method must be one of: cod or sslCommerZ",
     }),
+    followUp: Joi.string().trim(),
   },
   { abortEarly: true }
 ).unknown(true);
