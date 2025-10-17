@@ -17,14 +17,9 @@ const orderSchema = new mongoose.Schema(
     // 🛒 Items
     items: [
       {
-        productId: {
+        product: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
-          required: true,
-        },
-        name: {
-          type: String,
-          trim: true,
           required: true,
         },
         price: {
@@ -47,7 +42,8 @@ const orderSchema = new mongoose.Schema(
 
     // 🚚 Shipping info
     shippingInfo: {
-      fullName: { type: String, trim: true, required: true },
+      fullName: { type: String, trim: true },
+      email: { type: String, trim: true },
       phone: {
         type: String,
         trim: true,
@@ -128,8 +124,8 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ["Pending", "Hold", "Confirmed", "Packaging"],
-      default: "Pending",
+      enum: ["pending", "hold", "confirmed", "packaging"],
+      default: "pending",
     },
     invoiceId: { type: String, trim: true, default: null },
     followUp: {

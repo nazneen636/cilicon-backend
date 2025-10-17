@@ -188,3 +188,175 @@ exports.resetPasswordTemplate = (userName, userEmail, resetLink, expiresIn) => {
   // .replace(/{{brandName}}/g, "YourAppName")
   // .replace(/{{year}}/g, new Date().getFullYear());
 };
+
+exports.OrderConfirmation = (cart, shippingInfo, finalAmount) => {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Oribi Order Summary</title>
+  </head>
+  <body
+    style="margin:0; padding:0; background-color:#f3f4f6; font-family:'Segoe UI', Arial, sans-serif;"
+  >
+    <!-- Main Wrapper -->
+    <table
+      align="center"
+      cellpadding="0"
+      cellspacing="0"
+      width="100%"
+      style="max-width:650px; margin:40px auto; background-color:#ffffff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.08); overflow:hidden;"
+    >
+      <!-- Header -->
+      <tr>
+        <td
+          align="center"
+          style="background:linear-gradient(135deg, #16a34a, #22c55e); color:#ffffff; padding:24px;"
+        >
+          <img
+            src="https://your-domain.com/public/logo.png"
+            alt="Oribi Logo"
+            width="90"
+            style="margin-bottom:10px;"
+          />
+          <h1 style="margin:0; font-size:22px; font-weight:600;">
+            Your Order Has Been Confirmed!
+          </h1>
+          <p style="margin:6px 0 0; font-size:14px; opacity:0.9;">
+            Thanks for shopping with <strong>Oribi</strong>.
+          </p>
+        </td>
+      </tr>
+
+      <!-- Greeting -->
+      <tr>
+        <td style="padding:28px 40px 0; color:#111827;">
+          <p style="margin:0 0 12px; font-size:16px;">Hi <strong>${
+            shippingInfo.fullName
+          }</strong>,</p>
+          <p style="margin:0 0 20px; font-size:15px; color:#4b5563;">
+            We’ve received your order. Below is a summary of your purchase:
+          </p>
+        </td>
+      </tr>
+
+      <!-- Product Table -->
+      <tr>
+        <td style="padding:0 40px;">
+          <table
+            width="100%"
+            cellpadding="10"
+            cellspacing="0"
+            style="border-collapse:collapse; background-color:#f9fafb; border-radius:8px; overflow:hidden;"
+          >
+            <thead>
+              <tr style="background-color:#22c55e; color:#ffffff; text-align:left;">
+                <th style="padding:12px;">Product</th>
+                <th style="padding:12px;">Qty</th>
+                <th style="padding:12px;">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+               
+            ${cart.items?.map(
+              (item) =>
+                `  <tr style="background-color:#22c55e; color:#ffffff; text-align:left;">
+                <th style="padding:12px;">${
+                  item.product ? item.product.name : item.variant.name
+                }</th>
+                <th style="padding:12px;">${item.quantity}</th>
+                <th style="padding:12px;">${item.totalPrice}</th>
+              </tr>`
+            )}
+            
+            </tbody>
+          </table>
+        </td>
+      </tr>
+
+      <!-- Total Section -->
+      <tr>
+        <td style="padding:24px 40px 8px;">
+          <p
+            style="font-size:18px; font-weight:600; color:#111827; text-align:right; margin:0;"
+          >
+            Total: $${finalAmount}
+          </p>
+        </td>
+      </tr>
+
+      <!-- CTA -->
+      <tr>
+        <td align="center" style="padding:24px 0;">
+          <a
+            href="{{orderLink}}"
+            style="display:inline-block; background-color:#22c55e; color:#ffffff; text-decoration:none; font-weight:600; padding:12px 24px; border-radius:6px; transition:all 0.3s ease;"
+            >View Your Order</a
+          >
+        </td>
+      </tr>
+
+      <!-- Support Message -->
+      <tr>
+        <td style="padding:0 40px 24px; color:#6b7280; font-size:14px;">
+          <p style="margin:0;">
+            Need help? Contact us at
+            <a href="mailto:support@oribi.com" style="color:#22c55e;">support@oribi.com</a>.
+          </p>
+        </td>
+      </tr>
+
+      <!-- Footer -->
+      <tr>
+        <td
+          align="center"
+          style="background-color:#f9fafb; padding:16px; font-size:13px; color:#9ca3af;"
+        >
+          © 2025 <strong>Oribi</strong> — All Rights Reserved.
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+`;
+};
+
+exports.orderConfirmationSms = (orderId, customerName, totalAmount) => {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Order Confirmation</title>
+  </head>
+  <body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:#f6f7f9">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:32px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.06)">
+      <tr>
+        <td style="padding:18px 24px;border-bottom:1px solid #eee;">
+          <h2 style="margin:0;font-size:16px;color:#111;">Order Confirmation</h2>
+        </td>
+      </tr>
+
+      <tr>
+        <td style="padding:18px 24px;color:#333;font-size:14px;line-height:1.45">
+          <p style="margin:0 0 8px">Hi <strong>${customerName}</strong>,</p>
+          <p style="margin:0 0 12px">Your order (ID: <strong>${orderId}</strong>) has been confirmed.</p>
+
+          <p style="margin:0 0 6px">Total: <strong>${totalAmount}</strong></p>
+          <p style="margin:0 0 12px">We’ll notify you when it’s shipped.</p>
+
+          <p style="margin:18px 0 0;color:#666;font-size:13px">Thank you for shopping with Oribi.</p>
+        </td>
+      </tr>
+
+      <tr>
+        <td style="padding:12px 24px;background:#fafafa;color:#9aa0a6;font-size:12px;text-align:center">
+          © 2025 Oribi
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+`;
+};

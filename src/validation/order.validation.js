@@ -18,14 +18,14 @@ const orderValidationSchema = Joi.object(
         "string.max": "Full name must not exceed 50 characters",
         "any.required": "Full name is required",
       }),
-      phone: Joi.string()
-        .pattern(/^[0-9]{10,15}$/)
-        .required()
-        .messages({
-          "string.pattern.base":
-            "Phone number must contain only digits (10–15)",
-          "any.required": "Phone number is required",
-        }),
+      phone: Joi.string().pattern(/^[0-9]{10,15}$/),
+      // .messages({
+      //   "string.pattern.base":
+      //     "Phone number must contain only digits (10–15)",
+      //   "any.required": "Phone number is required",
+      // }),
+      email: Joi.string().trim(),
+      // .messages({ "any.required": "email name is required" }),
       address: Joi.string().trim().min(5).required().messages({
         "string.empty": "Address is required",
         "string.min": "Address must be at least 5 characters long",
@@ -48,7 +48,6 @@ const orderValidationSchema = Joi.object(
       "string.empty": "Payment method is required",
       "any.only": "Payment method must be one of: cod or sslCommerZ",
     }),
-    followUp: Joi.string().trim(),
   },
   { abortEarly: true }
 ).unknown(true);

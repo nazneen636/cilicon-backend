@@ -11,6 +11,12 @@ const delivaryChargeModel = require("../models/delivaryCharge.model");
 const invoiceModel = require("../models/invoice.model");
 const crypto = require("crypto");
 const SSLCommerzPayment = require("sslcommerz-lts");
+const { mailer } = require("../helpers/nodemailer");
+const {
+  OrderConfirmation,
+  orderConfirmationSms,
+} = require("../template/registration.template");
+const { sendSms } = require("../helpers/sendSms");
 
 const store_id = process.env.SSLCOMMERZ_STORE_ID;
 const store_passwd = process.env.SSLCOMMERZ_API_KEY;
@@ -76,7 +82,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
       shippingInfo,
       deliveryCharge,
       paymentMethod,
-      followUp: req.user || "",
+      followUp: req.user || null,
       totalQuantity: cart.totalQuantity,
     });
 
@@ -122,15 +128,15 @@ exports.createOrder = asyncHandler(async (req, res) => {
         product_name: "Computer.",
         product_category: "Electronic",
         product_profile: "general",
-        cus_name: "Customer Name",
-        cus_email: "customer@example.com",
+        cus_name: shippingInfo.fullName,
+        cus_email: shippingInfo.email || "customer@example.com",
         cus_add1: "Dhaka",
         cus_add2: "Dhaka",
         cus_city: "Dhaka",
         cus_state: "Dhaka",
-        cus_postcode: "1000",
+        // cus_postcode: "1000",
         cus_country: "Bangladesh",
-        cus_phone: "01711111111",
+        cus_phone: shippingInfo.phone || "01711111111",
 
         ship_name: "Customer Name",
         ship_add1: "Dhaka",
@@ -142,17 +148,33 @@ exports.createOrder = asyncHandler(async (req, res) => {
       };
       const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
       const response = await sslcz.init(data);
-      console.log(response.GatewayPageURL, "ok");
+      // save in order model
+      await order.save();
 
-      apiResponse.sendSuccess(res, 200, "payment initiate successful", {
+      if (shippingInfo.email) {
+        const template = OrderConfirmation(
+          cart,
+          shippingInfo,
+          order.finalAmount
+        );
+        sendEmail(template, shippingInfo.email, "Order Confirmation");
+      } else {
+        const msgTemplate = orderConfirmationSms(
+          order.inVoiceId || "id missing",
+          shippingInfo.fullName,
+          order.finalAmount
+        );
+        sendMsg(shippingInfo.phone, msgTemplate);
+      }
+      return apiResponse.sendSuccess(res, "payment initiate successful", 200, {
         url: response.GatewayPageURL,
       });
     }
     // save in order model
     await order.save();
-    apiResponse.sendSuccess(res, 200, "order successful", order);
+    apiResponse.sendSuccess(res, "order successful", 200, order);
   } catch (error) {
-    console.log("order failed", error.message);
+    console.log("order failed", error);
 
     let allStockAdjustPromise = [];
     if (order && order._id) {
@@ -191,16 +213,20 @@ exports.createOrder = asyncHandler(async (req, res) => {
     allStockAdjustPromise.push(
       couponModel.findOneAndUpdate(
         { _id: cart.coupon._id },
-        { $inc: { usedCount: -1 } }
-        // { usedCount: usedCount - 1 }
+        // { $inc: { usedCount: -1 } }
+        { usedCount: cart.coupon.usedCount - 1 }
       )
     );
   }
   await Promise.all(allStockAdjustPromise);
 });
 
-// if (!cart) {
-//   throw new customError(500, "brand create failed");
-// }
-// apiResponse.sendSuccess(res, "brand created successfully", 200, cart);
-// await brand.save();
+// send email
+const sendEmail = async (template, email, subject) => {
+  await mailer(template, email, subject);
+};
+
+// send msg
+const sendMsg = async (number, message) => {
+  await sendSms(number, message);
+};
