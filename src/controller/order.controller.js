@@ -17,6 +17,7 @@ const {
   orderConfirmationSms,
 } = require("../template/registration.template");
 const { sendSms } = require("../helpers/sendSms");
+const { axiosInstance } = require("../utils/axios");
 
 const store_id = process.env.SSLCOMMERZ_STORE_ID;
 const store_passwd = process.env.SSLCOMMERZ_API_KEY;
@@ -88,6 +89,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
     order.items = cart.items.map((item) => {
       if (item.product) {
         return {
+          id: item.product._id,
+          slug: item.product.slug,
           name: item.product.name,
           image: item.product.image,
           retailPrice: item.product.retailPrice,
@@ -263,7 +266,7 @@ exports.getAllOrder = asyncHandler(async (req, res) => {
 exports.updateOrderStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status, shippingInfo } = req.body;
-  const allowUpdates = ["packaging", "hold", "confirmed"];
+  const allowUpdates = ["packaging", "hold", "confirmed", "cancel"];
   const updated = await orderModel.findOneAndUpdate(
     { _id: id },
     {
@@ -288,6 +291,51 @@ exports.getTotalOrderStatusUpdate = asyncHandler(async (req, res) => {
         totalAmount: { $sum: "$finalAmount" },
       },
     },
+    {
+      $group: {
+        _id: null,
+        statusWise: {
+          $push: {
+            status: "$_id",
+            totalAmount: { $sum: "$finalAmount" },
+            count: "$count",
+          },
+        },
+        totalOrders: { $sum: "$count" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        statusWise: 1,
+        totalOrders: 1,
+      },
+    },
   ]);
-  apiResponse.sendSuccess(res, "get status successfully", 200, getStatus);
+  apiResponse.sendSuccess(res, "get status successfully", 201, getStatus);
+});
+
+// send order into courier
+exports.createOrderCourier = asyncHandler(async (req, res) => {
+  const { id } = req.body;
+  const { shippingInfo, transactionId, finalAmount } = await orderModel.findOne(
+    { _id: id }
+  );
+  console.log(shippingInfo, finalAmount, transactionId);
+
+  // const orderInfo =
+  const courierInfo = await axiosInstance.post("/create_order", {
+    invoice: transactionId,
+    recipient_name: shippingInfo.fullName,
+    recipient_phone: shippingInfo.phone,
+    recipient_address: shippingInfo.address,
+    cod_amount: finalAmount,
+    note: req.body.note ? req.body.note : "",
+  });
+  console.log(courierInfo);
+
+  // if (!allOrder.length) {
+  //   throw new customError(401, "order not found");
+  // }
+  // apiResponse.sendSuccess(res, "order retrieved successfully", 200, orderInfo);
 });
