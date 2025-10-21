@@ -177,7 +177,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
           order.finalAmount
         );
         sendEmail(template, shippingInfo.email, "Order Confirmation");
-      } else {
+      }
+      if (shippingInfo.phone) {
         const msgTemplate = orderConfirmationSms(
           order.inVoiceId || "id missing",
           shippingInfo.fullName,
@@ -249,3 +250,44 @@ const sendEmail = async (template, email, subject) => {
 const sendMsg = async (number, message) => {
   await sendSms(number, message);
 };
+
+exports.getAllOrder = asyncHandler(async (req, res) => {
+  const allOrder = await orderModel.find().sort({ createdAt: -1 }).limit(30);
+  if (!allOrder.length) {
+    throw new customError(401, "order not found");
+  }
+  apiResponse.sendSuccess(res, "order retrieved successfully", 200, allOrder);
+});
+
+// update Order Status
+exports.updateOrderStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status, shippingInfo } = req.body;
+  const allowUpdates = ["packaging", "hold", "confirmed"];
+  const updated = await orderModel.findOneAndUpdate(
+    { _id: id },
+    {
+      orderStatus: allowUpdates.includes(status) && status,
+      shippingInfo: { ...shippingInfo },
+    },
+    { new: true }
+  );
+  if (!updated) {
+    throw new customError(404, "order not updated");
+  }
+  apiResponse.sendSuccess(res, "order updated successfully", 201, updated);
+});
+
+// get all order status
+exports.getTotalOrderStatusUpdate = asyncHandler(async (req, res) => {
+  const getStatus = await orderModel.aggregate([
+    {
+      $group: {
+        _id: "$orderStatus",
+        count: { $sum: 1 },
+        totalAmount: { $sum: "$finalAmount" },
+      },
+    },
+  ]);
+  apiResponse.sendSuccess(res, "get status successfully", 200, getStatus);
+});

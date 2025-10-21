@@ -47,12 +47,11 @@ const orderSchema = new mongoose.Schema(
       phone: {
         type: String,
         trim: true,
-        required: true,
         match: [/^\+?\d{10,15}$/, "Invalid phone number format"],
       },
-      address: { type: String, trim: true, required: true },
-      city: { type: String, trim: true, required: true },
-      postalCode: { type: String, trim: true },
+      address: { type: String, trim: true, required: false },
+      country: { type: String, trim: true, default: "Bangladesh" },
+      deliveryZone: String,
     },
 
     // 🌍 Delivery info
@@ -128,6 +127,18 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
     invoiceId: { type: String, trim: true, default: null },
+    courier: {
+      name: {
+        type: String,
+        default: null,
+      },
+      trackingId: { type: String, default: null },
+      rawResponse: { type: mongoose.Schema.Types.Mixed, default: null },
+      status: {
+        type: String,
+        default: "pending",
+      },
+    },
     followUp: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
