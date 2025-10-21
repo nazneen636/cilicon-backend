@@ -24,7 +24,7 @@ const productionError = (error, res) => {
   }
 };
 
-exports.globalErrorHandler = (error, req, res, next) => {
+exports.globalErrorHandler = (error, res) => {
   const statusCode = error.statusCode || 500;
   if (process.env.NODE_ENV == "development") {
     developmentError(error, res);

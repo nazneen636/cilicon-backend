@@ -17,26 +17,26 @@ const orderSchema = new mongoose.Schema(
     // 🛒 Items
     items: [
       {
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-          required: true,
-        },
-        price: {
-          type: Number,
-          required: true,
-          min: 0,
-        },
-        quantity: {
-          type: Number,
-          required: true,
-          min: 1,
-        },
-        totalPrice: {
-          type: Number,
-          required: true,
-          min: 0,
-        },
+        // product: {
+        //   type: mongoose.Schema.Types.ObjectId,
+        //   ref: "Product",
+        //   required: true,
+        // },
+        // price: {
+        //   type: Number,
+        //   required: true,
+        //   min: 0,
+        // },
+        // quantity: {
+        //   type: Number,
+        //   required: true,
+        //   min: 1,
+        // },
+        // totalPrice: {
+        //   type: Number,
+        //   required: true,
+        //   min: 0,
+        // },
       },
     ],
 

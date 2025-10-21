@@ -78,14 +78,31 @@ exports.createOrder = asyncHandler(async (req, res) => {
     order = new orderModel({
       user: user,
       guestId: guestId,
-      items: cart.items,
+      // items: cart.items,
       shippingInfo,
       deliveryCharge,
       paymentMethod,
       followUp: req.user || null,
       totalQuantity: cart.totalQuantity,
     });
-
+    order.items = cart.items.map((item) => {
+      if (item.product) {
+        return {
+          name: item.product.name,
+          image: item.product.image,
+          retailPrice: item.product.retailPrice,
+          totalSales: item.product.totalSales,
+        };
+      }
+      if (item.variant) {
+        return {
+          name: item.variant.name,
+          image: item.variant.image,
+          retailPrice: item.variant.retailPrice,
+          totalSales: item.variant.totalSales,
+        };
+      }
+    });
     // merge delivery charge
     const { name, deliveryCharge: deliveryChargeAmount } =
       await applyDeliveryCharge(deliveryCharge);
@@ -100,6 +117,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
       .randomUUID()
       .split("-")[0]
       .toLocaleUpperCase()}`;
+
     // make invoice database
     const invoice = await invoiceModel.create({
       inVoiceId: transactionID,
@@ -109,6 +127,7 @@ exports.createOrder = asyncHandler(async (req, res) => {
       discountAmount: order.discountAmount,
       deliveryChargeAmount: deliveryChargeAmount,
     });
+    order.transactionId = transactionID;
     if (paymentMethod == "cod") {
       order.paymentMethod = "cod";
       order.paymentStatus = "pending";
