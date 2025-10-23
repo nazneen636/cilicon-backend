@@ -20,8 +20,7 @@ exports.success = asyncHandler(async (req, res) => {
     {
       paymentStatus: status == "VALID" && "success",
       paymentInfo: data,
-      valId: status,
-      transactionId: tran_id,
+      valId: status, 
       orderStatus: "confirmed",
     }
   );

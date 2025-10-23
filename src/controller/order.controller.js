@@ -321,7 +321,7 @@ exports.createOrderCourier = asyncHandler(async (req, res) => {
   const { shippingInfo, transactionId, finalAmount } = await orderModel.findOne(
     { _id: id }
   );
-  console.log(shippingInfo, finalAmount, transactionId);
+
 
   // const orderInfo =
   const courierInfo = await axiosInstance.post("/create_order", {
