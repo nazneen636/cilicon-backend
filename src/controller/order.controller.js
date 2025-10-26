@@ -318,24 +318,51 @@ exports.getTotalOrderStatusUpdate = asyncHandler(async (req, res) => {
 // send order into courier
 exports.createOrderCourier = asyncHandler(async (req, res) => {
   const { id } = req.body;
-  const { shippingInfo, transactionId, finalAmount } = await orderModel.findOne(
-    { _id: id }
-  );
-
+  const order = await orderModel.findOne({ _id: id });
 
   // const orderInfo =
   const courierInfo = await axiosInstance.post("/create_order", {
-    invoice: transactionId,
-    recipient_name: shippingInfo.fullName,
-    recipient_phone: shippingInfo.phone,
-    recipient_address: shippingInfo.address,
-    cod_amount: finalAmount,
+    invoice: order.transactionId,
+    recipient_name: order.shippingInfo.fullName,
+    recipient_phone: order.shippingInfo.phone,
+    recipient_address: order.shippingInfo.address,
+    cod_amount: order.finalAmount,
     note: req.body.note ? req.body.note : "",
   });
-  console.log(courierInfo);
+  console.log(courierInfo.data);
 
-  // if (!allOrder.length) {
-  //   throw new customError(401, "order not found");
+  if (courierInfo.data.status !== 200) {
+    throw new customError(501, "Not send order into courier");
+  }
+  order.courier.name = "steadfast";
+  order.courier.trackingId = courierInfo.data.consignment.tracking_code;
+  order.courier.status = courierInfo.data.consignment.status;
+  order.courier.rawResponse = courierInfo.data.consignment;
+  await order.save();
+  apiResponse.sendSuccess(
+    res,
+    "Courier send successfully",
+    200,
+    courierInfo.data
+  );
+});
+
+// find order into courier
+exports.findOrderCourier = asyncHandler(async (req, res) => {
+  // const { id } = req.body;
+  const courierProduct = await orderModel.find({ $ne: null });
+
+  console.log(courierProduct);
+
+  // if (courierInfo.data.status !== 200) {
+  //   throw new customError(501, "Not send order into courier");
   // }
-  // apiResponse.sendSuccess(res, "order retrieved successfully", 200, orderInfo);
+
+  // await order.save();
+  // apiResponse.sendSuccess(
+  //   res,
+  //   "Courier send successfully",
+  //   200,
+  //   courierInfo.data
+  // );
 });

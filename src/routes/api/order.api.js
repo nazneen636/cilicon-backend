@@ -7,5 +7,7 @@ _.route("/all-order").get(orderController.getAllOrder);
 _.route("/update-order/:id").put(orderController.updateOrderStatus);
 _.route("/order-status").get(orderController.getTotalOrderStatusUpdate);
 _.route("/courier-send").post(orderController.createOrderCourier);
+_.route("/courier-product").post(orderController.findOrderCourier);
+_.route("/webhook").post(orderController.webhookIntegration);
 
 module.exports = _;
