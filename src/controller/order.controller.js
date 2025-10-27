@@ -394,5 +394,7 @@ exports.webhookIntegration = asyncHandler(async (req, res) => {
       status: "success",
       message: "Webhook received successfully.",
     });
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+  }
 });

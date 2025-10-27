@@ -5,6 +5,7 @@ const {
 const { customError } = require("../helpers/customError");
 const { generatedQRCode, generatedBarCode } = require("../helpers/qrCode");
 const productModel = require("../models/product.model");
+const variantModel = require("../models/variant.model");
 const apiResponse = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { validateProduct } = require("../validation/product.validation");
@@ -234,4 +235,31 @@ exports.productPagination = asyncHandler(async (req, res) => {
     totalItems,
     totalPage,
   });
+});
+
+exports.bestSelling = asyncHandler(async (req, res) => {
+  const sellingProduct = await productModel.aggregate([
+    {
+      $match: {
+        totalSales: { $gt: 10 },
+      },
+    },
+  ]);
+  const sellingVariant = await variantModel.aggregate([
+    {
+      $match: {
+        totalSales: { $gt: 10 },
+      },
+    },
+  ]);
+  const allBestSellingProduct = [...sellingProduct, ...sellingVariant];
+  if (allBestSellingProduct.length <= 0) {
+    throw new customError(401, "best selling product not found");
+  }
+  apiResponse.sendSuccess(
+    res,
+    "Best Selling Product Retrieved",
+    401,
+    allBestSellingProduct
+  );
 });
