@@ -18,6 +18,7 @@ const {
 } = require("../template/registration.template");
 const { sendSms } = require("../helpers/sendSms");
 const { axiosInstance } = require("../utils/axios");
+const { log } = require("console");
 
 const store_id = process.env.SSLCOMMERZ_STORE_ID;
 const store_passwd = process.env.SSLCOMMERZ_API_KEY;
@@ -365,4 +366,33 @@ exports.findOrderCourier = asyncHandler(async (req, res) => {
   //   200,
   //   courierInfo.data
   // );
+});
+
+// webhook
+exports.webhookIntegration = asyncHandler(async (req, res) => {
+  //   {
+  //     "notification_type": "delivery_status",
+  //     "consignment_id": 12345,
+  //     "invoice": "INV-67890",
+  //     "cod_amount": 1500.00,
+  //     "status": "Delivered",
+  //     "delivery_charge": 100.00,
+  //     "tracking_message": "Your package has been delivered successfully.",
+  //     "updated_at": "2025-03-02 12:45:30"
+  // }
+  try {
+    await orderModel.findOneAndUpdate(
+      {
+        transactionId: req.body.invoice,
+      },
+      {
+        "courier.status": req.body.status,
+        "courier.rawResponse": req.body.status,
+      }
+    );
+    return res.status(200).json({
+      status: "success",
+      message: "Webhook received successfully.",
+    });
+  } catch (error) {}
 });
