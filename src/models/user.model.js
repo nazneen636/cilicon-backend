@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { string } = require("joi");
+const { string, required } = require("joi");
 require("dotenv").config();
 const { Schema, Types } = mongoose;
 const slugify = require("slugify");
@@ -22,10 +22,7 @@ const userSchema = new Schema({
     trim: true,
     required: true,
   },
-  image: {
-    type: String,
-    trim: true,
-  },
+  image: {},
   isEmailVerified: { type: Boolean },
   isPhoneVerified: { type: Boolean },
   address: {
@@ -77,8 +74,14 @@ const userSchema = new Schema({
   ],
   permission: [
     {
-      type: Types.ObjectId,
-      ref: "Permission",
+      permissionId: {
+        type: Types.ObjectId,
+        ref: "Permission",
+      },
+      action: {
+        type: String,
+        enum: ["create", "edit", "update", "delete"],
+      },
     },
   ],
   resetPasswordOtp: Number,
