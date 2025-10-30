@@ -82,7 +82,7 @@ const userSchema = new Schema({
         {
           type: String,
           trim: true,
-          enum: ["View", "add", "edit", "delete"],
+          enum: ["view", "add", "edit", "delete"],
         },
       ],
     },
