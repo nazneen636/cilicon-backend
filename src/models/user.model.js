@@ -78,10 +78,13 @@ const userSchema = new Schema({
         type: Types.ObjectId,
         ref: "Permission",
       },
-      action: {
-        type: String,
-        enum: ["create", "edit", "update", "delete"],
-      },
+      action: [
+        {
+          type: String,
+          trim: true,
+          enum: ["View", "add", "edit", "delete"],
+        },
+      ],
     },
   ],
   resetPasswordOtp: Number,

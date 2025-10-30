@@ -1,11 +1,14 @@
 const express = require("express");
 const _ = express.Router();
-const addUserPermissionController = require("../../controller/adduserPermission.controller");
+const addUserUserController = require("../../controller/adduser.controller");
 const { upload } = require("../../middleware/multer.middle");
+const { authgurd } = require("../../middleware/auth.middleware");
 
 _.route("/adduser/").post(
+  authgurd,
   upload.fields([{ name: "image", maxCount: 1 }]),
-  addUserPermissionController.addUser
+  addUserUserController.addUser
 );
+_.route("/all-user").get(addUserUserController.getAllUser);
 
 module.exports = _;
