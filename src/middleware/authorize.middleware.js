@@ -7,7 +7,7 @@ exports.autorize = (action) => {
         throw new customError(401, "Unauthorized");
       }
     } catch (error) {
-      // console.log(error);
+      console.log(error);
     }
   };
 };
