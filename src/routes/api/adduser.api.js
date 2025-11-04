@@ -7,7 +7,7 @@ const { autorize } = require("../../middleware/authorize.middleware");
 
 _.route("/adduser/").post(
   authgurd,
-  autorize,
+  // autorize,
   upload.fields([{ name: "image", maxCount: 1 }]),
   addUserUserController.addUser
 );

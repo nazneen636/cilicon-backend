@@ -17,6 +17,7 @@ exports.createCategory = asyncHandler(async (req, res) => {
     name: value.name,
     image: imageAsset,
   });
+  console.log(category);
 
   if (!category) {
     throw new customError(500, "category create failed");

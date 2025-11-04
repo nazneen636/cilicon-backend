@@ -3,7 +3,7 @@ const { customError } = require("../helpers/customError");
 const { asyncHandler } = require("../utils/asyncHandler");
 const jwt = require("jsonwebtoken");
 require("../models/permission.modal");
-const authgurd = async (req, res) => {
+const authgurd = async (req, res, next) => {
   const aceessToken =
     req?.headers?.authorization?.replace("Bearer ", "") ||
     req?.body?.accessToken ||
@@ -16,5 +16,7 @@ const authgurd = async (req, res) => {
     .select("_id name email image role");
   if (!user) throw new customError(401, "You are unauthorized!");
   console.log(user, "authgard");
+  req.user = user;
+  next();
 };
 module.exports = { authgurd };
