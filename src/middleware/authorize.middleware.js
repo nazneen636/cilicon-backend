@@ -19,6 +19,7 @@ exports.autorize = (requiredAction) => {
       console.log(req.user.permission, "isAuthorized");
 
       console.log(isAuthorized.action.includes(req), "auth");
+      next();
     } catch (error) {
       next(error);
     }

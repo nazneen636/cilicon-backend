@@ -5,6 +5,7 @@ const {
 const { customError } = require("../helpers/customError");
 const userModel = require("../models/user.model");
 require("../models/role.model");
+require("../models/permission.modal");
 const apiResponse = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { validateUser } = require("../validation/user.validation");
@@ -49,13 +50,14 @@ exports.getAllUser = asyncHandler(async (req, res) => {
 });
 
 exports.addPermissionToUser = asyncHandler(async (req, res) => {
-  const { user, permissions } = req.body;
+  const { user, permission } = req.body;
 
   const userInstance = await userModel.findOneAndUpdate(
     { _id: user },
-    { permission: permissions },
+    { permission: permission },
     { new: true }
   );
+  console.log(userInstance);
   if (!userInstance) {
     throw new customError(404, "User not found");
   }

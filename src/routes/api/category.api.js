@@ -2,7 +2,11 @@ const express = require("express");
 const _ = express.Router();
 const categoryController = require("../../controller/category.controller");
 const { upload } = require("../../middleware/multer.middle");
+const { authgurd } = require("../../middleware/auth.middleware");
+const { autorize } = require("../../middleware/authorize.middleware");
 _.route("/create-category").post(
+  authgurd,
+  autorize("category"),
   upload.fields([{ name: "image", maxCount: 1 }]),
   categoryController.createCategory
 );
